@@ -1,0 +1,9 @@
+# 复现环境：Python 3 (在 Python 3.12 / 3.14 上均测试通过)
+# 与原始 Steal-ML 仓库 (Python 2 + sklearn 0.17) 不同，这里全部使用现代 API。
+# 版本为开发时所用，列为下限参考；更高版本通常也可。
+
+numpy>=1.26
+scipy>=1.11
+scikit-learn>=1.3
+pandas>=2.0
+matplotlib>=3.7

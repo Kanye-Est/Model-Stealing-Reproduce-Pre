@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.ipynb_checkpoints/
+.venv/
+venv/
+
+# 实验产出（结果 csv 和大图按需保留，临时缓存忽略）
+experiments/results/*.tmp
+*.log
+
+# 数据缓存（sklearn 自动下载的数据）
+data_cache/
+
+# 系统
+.DS_Store
+.idea/
+.vscode/
