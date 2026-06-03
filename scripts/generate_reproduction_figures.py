@@ -168,12 +168,58 @@ def plot_tree_path_finding() -> None:
     savefig(FIGURES / "tree_path_finding.png")
 
 
+def plot_tree_leaf_id_mechanism() -> None:
+    """Draw a slide-friendly schematic for the tree path-finding edge case."""
+    fig, ax = plt.subplots(figsize=(9.6, 4.2))
+    ax.set_xlim(-1.05, 1.05)
+    ax.set_ylim(-0.15, 1.05)
+    ax.axis("off")
+
+    bands = [
+        (-1.0, -0.35, "#e8f1fb", "leaf A"),
+        (-0.35, 0.18, "#fde9e5", "leaf B"),
+        (0.18, 1.0, "#e8f1fb", "leaf A"),
+    ]
+    for low, high, color, label in bands:
+        ax.axvspan(low, high, ymin=0.28, ymax=0.62, color=color, ec="#3c4b5f", lw=1.4)
+        ax.text((low + high) / 2, 0.52, label, ha="center", va="center", fontsize=15, weight="bold")
+
+    for x, text in [(-1.0, "left endpoint"), (1.0, "right endpoint")]:
+        ax.plot([x], [0.35], marker="o", color="#1f4e79", markersize=9)
+        ax.text(x, 0.16, text, ha="center", va="center", fontsize=11)
+
+    ax.plot([-0.35, -0.35], [0.25, 0.78], color="#c43c2f", linestyle="--", lw=2)
+    ax.plot([0.18, 0.18], [0.25, 0.78], color="#c43c2f", linestyle="--", lw=2)
+    ax.text(-0.35, 0.86, "hidden split", ha="center", fontsize=11, color="#c43c2f")
+    ax.text(0.18, 0.86, "hidden split", ha="center", fontsize=11, color="#c43c2f")
+
+    ax.annotate(
+        "endpoints can have the same leaf id",
+        xy=(0.0, 0.35),
+        xytext=(0.0, 0.02),
+        ha="center",
+        fontsize=12,
+        arrowprops=dict(arrowstyle="->", color="#3c4b5f", lw=1.5),
+    )
+    ax.text(
+        0.0,
+        0.98,
+        "Implementation note: recover predicates along the current path, not only interval endpoints",
+        ha="center",
+        va="top",
+        fontsize=14,
+        weight="bold",
+    )
+    savefig(FIGURES / "tree_leaf_id_mechanism.png")
+
+
 def main() -> None:
     FIGURES.mkdir(exist_ok=True)
     plot_equation_budget_curve()
     plot_confidence_vs_label_only()
     plot_rounding_curve()
     plot_tree_path_finding()
+    plot_tree_leaf_id_mechanism()
     run_klr(seed=0, per_class=5, gamma=0.08, output=FIGURES / "klr_leakage.png")
     print("Generated reproduction figures in figures/")
 
