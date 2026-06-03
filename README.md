@@ -66,7 +66,7 @@ pip install -r requirements.txt
 cd Model-Stealing-Reproduce-Pre
 
 # 攻击一：方程求解（在多个数据集上，画"查询数 vs 一致率"）
-python -m src.equation_solving.run_equation_solving
+python -m src.equation_solving.run_binary_lr
 
 # 攻击二：决策树路径查找（本地树当黑盒，验证完美还原）
 python -m src.decision_tree.run_tree_extraction

@@ -1,0 +1,55 @@
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+import numpy as np
+
+
+@dataclass
+class QueryCounter:
+    count: int = 0
+
+    def add(self, X: np.ndarray) -> None:
+        self.count += int(np.asarray(X).shape[0])
+
+    def reset(self) -> None:
+        self.count = 0
+
+
+class ClassifierOracle:
+    """Black-box wrapper exposing only prediction queries."""
+
+    def __init__(self, model, n_features: int):
+        self.model = model
+        self.n_features = n_features
+        self.counter = QueryCounter()
+
+    @property
+    def classes_(self) -> np.ndarray:
+        return self.model.classes_
+
+    @property
+    def query_count(self) -> int:
+        return self.counter.count
+
+    def reset_count(self) -> None:
+        self.counter.reset()
+
+    def _check_X(self, X: np.ndarray) -> np.ndarray:
+        X = np.asarray(X, dtype=float)
+        if X.ndim == 1:
+            X = X.reshape(1, -1)
+        if X.shape[1] != self.n_features:
+            raise ValueError(f"expected {self.n_features} features, got {X.shape[1]}")
+        return X
+
+    def query_proba(self, X: np.ndarray) -> np.ndarray:
+        X = self._check_X(X)
+        self.counter.add(X)
+        return self.model.predict_proba(X)
+
+    def query_label(self, X: np.ndarray) -> np.ndarray:
+        X = self._check_X(X)
+        self.counter.add(X)
+        return self.model.predict(X)
+
