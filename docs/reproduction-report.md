@@ -136,3 +136,43 @@ python -m src.equation_solving.run_rounding --model ovr
 结论：复现了论文中 rounding 防御的核心趋势。4-5 位小数几乎不影响模型提取；3 位会增加概率误差但标签一致率仍很高；2 位才显著削弱攻击，但在 Digits 上仍能得到 98%-99% 左右的功能一致率。因此，置信度取整可以提高攻击难度，但不是完整防御。
 
 实现备注：`run_rounding` 使用 `RoundedProbaOracle` 包装真实 oracle，只改变攻击者看到的 `query_proba` 输出；评估时仍与未取整的真实模型比较。
+
+---
+
+## Phase 4：决策树 Path-Finding（bottom-up 教学版）
+
+对应论文：§4.2 Decision Tree Path-Finding。
+
+实验入口：
+
+```bash
+python -m src.decision_tree.run_tree_extraction
+```
+
+实验设置：
+
+- 数据集：`sklearn.datasets.load_iris`
+- 特征缩放：`[-1, 1]`
+- 受害者模型：`sklearn.tree.DecisionTreeClassifier(max_depth=3)`
+- 攻击能力：
+  - `query_leaf_id(x)`：返回 sklearn leaf index，作为论文中 leaf identity oracle 的本地教学版
+  - `query_label(x)`：只用于记录叶子预测标签和评估
+- 攻击方式：bottom-up path finding。对当前 query 到达的叶子，逐特征做一维差分测试和二分，找到仍通向当前 leaf id 的连续区间；其它区间生成新 query 去探索未访问叶子。
+- 连续特征精度：`epsilon=1e-5`
+- 均匀评估点：10,000
+
+当前结果（Python 3.14.5，seed=0）：
+
+| 指标 | 数值 |
+|---|---:|
+| 特征维度 `d` | 4 |
+| 目标树叶子数 | 5 |
+| 提取叶子数 | 5 |
+| 目标树深度 | 3 |
+| 提取查询数 | 557 |
+| 测试集一致率 | 100.0000% |
+| 均匀采样一致率 | 100.0000% |
+
+结论：复现了决策树 path-finding 的核心机制：攻击者不读取树结构，只用 leaf identity oracle，通过逐特征差分测试恢复每个叶子的路径谓词，并得到与目标树功能一致的本地副本。
+
+实现备注：当前版本是教学版，覆盖连续特征和唯一 leaf id；尚未实现论文中 BigML 风格的 confidence pseudo-identifier、categorical split、duplicate id 处理和 partial-query top-down 变体。
