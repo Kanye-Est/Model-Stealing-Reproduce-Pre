@@ -31,6 +31,9 @@ Model-Stealing-Reproduce-Pre/
 ├── docs/
 │   ├── paper-notes.md            # 论文精读笔记（中文）
 │   ├── presentation-outline.md   # 组会 pre 大纲
+│   ├── author-slides-notes.md    # 作者 USENIX slides 借鉴笔记
+│   ├── original-repo-guide.md    # 原始 Steal-ML 仓库导读
+│   ├── reproduction-roadmap.md   # Python 3 复现路线图
 │   └── reproduction-report.md    # 复现结果 vs 论文数值
 ├── src/
 │   ├── common/                   # 数据集加载 + 黑盒 oracle 抽象 + 误差度量
@@ -56,6 +59,8 @@ pip install -r requirements.txt
 ---
 
 ## 快速开始
+
+目前仓库已先放入阅读、pre 和复现设计文档；`src/` 代码会按 [`docs/reproduction-roadmap.md`](docs/reproduction-roadmap.md) 分阶段补齐。
 
 ```bash
 cd Model-Stealing-Reproduce-Pre
