@@ -97,3 +97,42 @@ python -m src.equation_solving.run_multiclass_lr --dataset digits --model ovr
 
 - 现代 `scikit-learn` 已移除 `LogisticRegression(multi_class=...)` 参数。本仓库用新版默认 multinomial LR 表示 softmax，用 `OneVsRestClassifier` 显式构造 OvR。
 - softmax 参数有平移不唯一性，因此报告以功能一致率和概率 TV 距离为主，不比较参数逐项误差。
+
+---
+
+## Phase 3：置信度 rounding 防御实验
+
+对应论文：§7 Rounding confidences。
+
+实验入口：
+
+```bash
+python -m src.equation_solving.run_rounding
+python -m src.equation_solving.run_rounding --model ovr
+```
+
+实验设置：
+
+- 数据集：`sklearn.datasets.load_digits`
+- 受害者模型：softmax / OvR 多类 LR
+- 攻击预算：650 次查询，即 `1.0 * c * (d + 1)`
+- 攻击者看到的概率：先按 `decimals` 四舍五入，再重新归一化
+- 评估基准：未取整的真实 oracle 标签和概率
+- 均匀评估点：10,000
+
+当前结果（Python 3.14.5，seed=0，Digits）：
+
+| 模型 | 置信度小数位 | 查询数 | 测试集一致率 | 均匀一致率 | 测试 TV | 均匀 TV | 优化成功 |
+|---|---:|---:|---:|---:|---:|---:|---|
+| softmax | 5 | 650 | 100.0000% | 99.9700% | `1.601e-06` | `7.122e-06` | True |
+| softmax | 4 | 650 | 100.0000% | 99.9600% | `1.962e-05` | `6.624e-05` | True |
+| softmax | 3 | 650 | 100.0000% | 99.9000% | `2.749e-04` | `7.964e-04` | True |
+| softmax | 2 | 650 | 99.6296% | 99.0900% | `3.170e-03` | `1.068e-02` | True |
+| OvR | 5 | 650 | 100.0000% | 100.0000% | `1.343e-04` | `3.027e-05` | True |
+| OvR | 4 | 650 | 100.0000% | 99.9600% | `4.403e-04` | `2.642e-04` | True |
+| OvR | 3 | 650 | 100.0000% | 99.7900% | `4.508e-03` | `2.899e-03` | True |
+| OvR | 2 | 650 | 98.5185% | 98.3000% | `4.875e-02` | `1.964e-02` | False |
+
+结论：复现了论文中 rounding 防御的核心趋势。4-5 位小数几乎不影响模型提取；3 位会增加概率误差但标签一致率仍很高；2 位才显著削弱攻击，但在 Digits 上仍能得到 98%-99% 左右的功能一致率。因此，置信度取整可以提高攻击难度，但不是完整防御。
+
+实现备注：`run_rounding` 使用 `RoundedProbaOracle` 包装真实 oracle，只改变攻击者看到的 `query_proba` 输出；评估时仍与未取整的真实模型比较。

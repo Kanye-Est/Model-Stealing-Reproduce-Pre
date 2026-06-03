@@ -53,3 +53,35 @@ class ClassifierOracle:
         self.counter.add(X)
         return self.model.predict(X)
 
+
+class RoundedProbaOracle:
+    """Oracle wrapper that rounds confidence values before returning them."""
+
+    def __init__(self, base_oracle: ClassifierOracle, decimals: int):
+        self.base_oracle = base_oracle
+        self.decimals = decimals
+        self.n_features = base_oracle.n_features
+
+    @property
+    def classes_(self) -> np.ndarray:
+        return self.base_oracle.classes_
+
+    @property
+    def query_count(self) -> int:
+        return self.base_oracle.query_count
+
+    def reset_count(self) -> None:
+        self.base_oracle.reset_count()
+
+    def query_proba(self, X: np.ndarray) -> np.ndarray:
+        probas = self.base_oracle.query_proba(X)
+        rounded = np.round(probas, self.decimals)
+        row_sums = np.sum(rounded, axis=1, keepdims=True)
+        zero_rows = row_sums[:, 0] == 0.0
+        if np.any(zero_rows):
+            rounded[zero_rows] = 1.0 / rounded.shape[1]
+            row_sums = np.sum(rounded, axis=1, keepdims=True)
+        return rounded / row_sums
+
+    def query_label(self, X: np.ndarray) -> np.ndarray:
+        return self.base_oracle.query_label(X)
