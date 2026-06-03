@@ -176,3 +176,40 @@ python -m src.decision_tree.run_tree_extraction
 结论：复现了决策树 path-finding 的核心机制：攻击者不读取树结构，只用 leaf identity oracle，通过逐特征差分测试恢复每个叶子的路径谓词，并得到与目标树功能一致的本地副本。
 
 实现备注：当前版本是教学版，覆盖连续特征和唯一 leaf id；尚未实现论文中 BigML 风格的 confidence pseudo-identifier、categorical split、duplicate id 处理和 partial-query top-down 变体。
+
+---
+
+## Phase 5：Label-Only retraining 攻击
+
+对应论文：§5 Extraction Given Class Labels Only。
+
+实验入口：
+
+```bash
+python -m src.label_only.run_label_only
+```
+
+实验设置：
+
+- 数据集：`sklearn.datasets.load_digits`
+- 受害者模型：softmax 多类 LR
+- 攻击能力：只能调用 `query_label(x)`，看不到 confidence values
+- 对比策略：
+  - uniform retraining：均匀随机采样 query，查询标签后本地重训 softmax LR
+  - adaptive retraining：先用少量均匀 query 训练副本，再反复在当前副本最不确定的点附近查询标签并重训
+- 均匀评估点：10,000
+
+当前结果（Python 3.14.5，seed=0，Digits softmax）：
+
+| 策略 | 查询预算 | 测试集一致率 | 均匀一致率 |
+|---|---:|---:|---:|
+| uniform | 650 | 94.4444% | 68.8300% |
+| adaptive | 650 | 95.0000% | 76.1300% |
+| uniform | 6,500 | 99.6296% | 94.3700% |
+| adaptive | 6,500 | 100.0000% | 97.8300% |
+| uniform | 26,000 | 99.6296% | 97.7300% |
+| adaptive | 26,000 | 100.0000% | 99.3300% |
+
+结论：复现了论文中 label-only 防御下的核心趋势。隐藏 confidence 后，650 次查询不再足以在整个输入空间上精确提取；查询预算提高到 6,500 / 26,000 后，副本才逐步接近目标模型。adaptive retraining 在相同预算下明显优于 uniform retraining，但仍比 confidence-based equation-solving 昂贵得多。
+
+实现备注：当前版本实现 uniform 与 adaptive retraining；尚未实现 Lowd-Meek 线性边界恢复和 line-search retraining。
