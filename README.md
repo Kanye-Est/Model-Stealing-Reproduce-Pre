@@ -84,6 +84,24 @@ python -m src.klr_leakage.run_klr_leakage
 
 ---
 
+## 组会 Beamer 复现部分
+
+复现部分的 LaTeX Beamer 在 `slides/reproduction_section.tex`，已经包含论文复现目标、数据集、攻击流程、实验曲线、KLR 泄露图和复现踩坑总结。
+
+```bash
+# 重新生成 slides 中使用的图
+python scripts/generate_reproduction_figures.py
+
+# 编译 Beamer PDF
+cd slides
+xelatex -interaction=nonstopmode -halt-on-error reproduction_section.tex
+xelatex -interaction=nonstopmode -halt-on-error reproduction_section.tex
+```
+
+编译产物为 `slides/reproduction_section.pdf`。如果系统 Python 被 PEP 668 限制，请先使用 `.venv` 或 conda 环境安装依赖。
+
+---
+
 ## 复现结果
 
 跑完后见 [`docs/reproduction-report.md`](docs/reproduction-report.md)（含与论文数值的逐项对比）。

@@ -10,6 +10,17 @@ venv/
 experiments/results/*.tmp
 *.log
 
+# LaTeX build artifacts
+*.aux
+*.nav
+*.out
+*.snm
+*.toc
+*.vrb
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+
 # 数据缓存（sklearn 自动下载的数据）
 data_cache/
 
