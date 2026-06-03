@@ -213,3 +213,38 @@ python -m src.label_only.run_label_only
 结论：复现了论文中 label-only 防御下的核心趋势。隐藏 confidence 后，650 次查询不再足以在整个输入空间上精确提取；查询预算提高到 6,500 / 26,000 后，副本才逐步接近目标模型。adaptive retraining 在相同预算下明显优于 uniform retraining，但仍比 confidence-based equation-solving 昂贵得多。
 
 实现备注：当前版本实现 uniform 与 adaptive retraining；尚未实现 Lowd-Meek 线性边界恢复和 line-search retraining。
+
+---
+
+## Phase 6：KLR representer 训练数据泄露可视化
+
+对应论文：§4.1.3 Training Data Leakage for Kernel LR。
+
+实验入口：
+
+```bash
+python -m src.klr_leakage.run_klr_leakage
+```
+
+实验设置：
+
+- 数据集：`sklearn.datasets.load_digits`
+- 模型：RBF representer classifier，用 KLR 风格的 representer 矩阵计算类别概率
+- representer 选择：每个数字类别随机选 5 张训练图像，共 50 个 representers
+- 攻击展示：一旦模型被提取为白盒，representer 矩阵本身就是模型参数的一部分，因此训练图像子集随模型一起泄露
+- 输出图片：`figures/klr_leakage.png`
+
+当前结果（Python 3.14.5，seed=0）：
+
+| 指标 | 数值 |
+|---|---:|
+| 类别数 | 10 |
+| 每类 representer 数 | 5 |
+| 总 representer 数 | 50 |
+| gamma | 0.08 |
+| 目标模型测试准确率 | 78.7037% |
+| 输出图 | `figures/klr_leakage.png` |
+
+结论：复现了论文中 KLR 泄露现象的教学版：对于显式保存训练样本子集作为 representers 的 kernel 模型，模型提取不仅泄露决策函数，也会泄露嵌入模型参数中的训练图像。
+
+实现备注：当前版本强调“representers 随白盒模型泄露”的可视化，不实现论文中通过优化反推出 representer 坐标的完整攻击。
